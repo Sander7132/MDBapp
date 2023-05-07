@@ -1,23 +1,21 @@
 import express from 'express';
 import defaultDataSource from '../datasource';
-import { Doctor } from '../entities/doctor';
+import { Hospital } from '../entities/hospital';
 
 const router = express.Router();
 
-interface CreateDoctorParams {
-    fName: string;
-    lName: string;
-    address: string
+interface CreateHospitalParams {
+    name: string;
+    address: string;
     phoneNumber: string;
-    speciality: string;
+
 }
 
-interface UpdateDoctorParams {
-    fName?: string;
-    lName?: string;
+interface UpdateHospitalParams {
+    name?: string;
     address?: string;
     phoneNumber?: string;
-    speciality?: string;
+
 
 }
   
@@ -25,15 +23,15 @@ interface UpdateDoctorParams {
 router.get("/", async (req, res) => {
     try {
       // küsi artiklid andmebaasist
-      const Doctors = await defaultDataSource.getRepository(Doctor).find();
+      const Hospitals = await defaultDataSource.getRepository(Hospital).find();
   
       // vasta artiklite kogumikuga JSON formaadis
-      return res.status(200).json({ data: Doctors });
+      return res.status(200).json({ data: Hospitals });
     } catch (error) {
       console.log("ERROR", { message: error });
   
       // vasta süsteemi veaga kui andmebaasipäringu jooksul ootamatu viga tekib
-      return res.status(500).json({ message: "Could not fetch Doctors" });
+      return res.status(500).json({ message: "Could not fetch Hospital" });
     }
 });
   
@@ -41,34 +39,32 @@ router.get("/", async (req, res) => {
 // POST - saadab infot
 router.post("/", async (req, res) => {
 try {
-    const { fName, lName, address, phoneNumber, speciality  } = req.body as CreateDoctorParams;
+    const { name, address, phoneNumber } = req.body as CreateHospitalParams;
 
     // TODO: validate & santize
-    if (!fName || !lName || !address || !phoneNumber || !speciality) {
+    if (!name || !address || !phoneNumber) {
     return res
         .status(400)
-        .json({ error: "doctor has to have first name, last name and title" });
+        .json({ error: "hospital has to have first name, last name and title" });
     }
 
 
     // create new Author with given parameters
-    const doctor = Doctor.create({
-    fName: fName.trim() ?? "",
-    lName: lName.trim() ?? "",
+    const hospital = Hospital.create({
+    name: name.trim() ?? "",
     address: address.trim() ?? "",
     phoneNumber: phoneNumber.trim() ?? "",
-    speciality: speciality.trim() ?? "",
     });
 
     //save Author to database
-    const result = await doctor.save();
+    const result = await hospital.save();
 
     return res.status(200).json({ data: result });
 } catch (error) {
     console.log("ERROR", { message: error });
 
     // vasta süsteemi veaga kui andmebaasipäringu jooksul ootamatu viga tekib
-    return res.status(500).json({ message: "Could not fetch doctor" });
+    return res.status(500).json({ message: "Could not fetch Hospitals" });
 }
 });
 
@@ -78,34 +74,34 @@ try {
     const { id } = req.params;
 
     // tavaline ORM päring koos "relation" entity sisuga
-    const doctor = await defaultDataSource
-    .getRepository(Doctor)
+    const hospital = await defaultDataSource
+    .getRepository(Hospital)
     .findOne({ where:{id: parseInt(id)}, relations: ['articles'] });
 
     // Querybuildering tehtud samalaadne päring (leftjoin tüttu hetkel ainult 1)
-    // const doctorArticles = await defaultDataSource.createQueryBuilder()
+    // const hospitalArticles = await defaultDataSource.createQueryBuilder()
     // .select("*")
-    // .from("doctor", "doctor")
-    // .leftJoin("article", "articles", "articles.doctorId = doctor.id")
-    // .where("doctor.id = :id", {id: id})
+    // .from("hospital", "hospital")
+    // .leftJoin("article", "articles", "articles.hospitalId = hospital.id")
+    // .where("hospital.id = :id", {id: id})
     // .getRawOne();
     
     // return res.status(200).json({ data: {
-    //     id:doctorArticles.id,
-    //     firstName:doctorArticles.firstName,
-    //     lastName:doctorArticles.lastName,
+    //     id:hospitalArticles.id,
+    //     firstName:hospitalArticles.firstName,
+    //     lastName:hospitalArticles.lastName,
     //     article: {
-    //         title: doctorArticles.title,
-    //         body: doctorArticles.body,
+    //         title: hospitalArticles.title,
+    //         body: hospitalArticles.body,
     //     }
     //  }});
 
-    return res.status(200).json({ data: doctor });
+    return res.status(200).json({ data: hospital });
 } catch (error) {
     console.log("ERROR", { message: error });
 
     // vasta süsteemi veaga kui andmebaasipäringu jooksul ootamatu viga tekib
-    return res.status(500).json({ message: "Could not fetch doctor" });
+    return res.status(500).json({ message: "Could not fetch hospital" });
 }
 });
 
@@ -113,27 +109,25 @@ try {
 router.put("/:id", async (req, res) => {
 try {
     const { id } = req.params;
-    const { fName, lName, address, phoneNumber, speciality } = req.body as UpdateDoctorParams;
+    const { name, address, phoneNumber} = req.body as UpdateHospitalParams;
 
-    const doctor = await defaultDataSource
-    .getRepository(Doctor)
+    const hospital = await defaultDataSource
+    .getRepository(Hospital)
     .findOneBy({ id: parseInt(id) });
 
-    if (!doctor) {
+    if (!hospital) {
     return res.status(404).json({ error: "Author not found" });
     }
 
     // uuendame andmed objektis (lokaalne muudatus)
-    doctor.fName = fName ? fName : doctor.fName;
-    doctor.lName = lName ? lName : doctor.lName;
-    doctor.address = address ? address : doctor.address;
-    doctor.phoneNumber = phoneNumber ? phoneNumber : doctor.phoneNumber;
-    doctor.speciality = speciality ? speciality : doctor.speciality;
+    hospital.name = name ? name : hospital.name;
+    hospital.address = address ? address : hospital.address;
+    hospital.phoneNumber = phoneNumber ? phoneNumber : hospital.phoneNumber;
 
     
 
     //salvestame muudatused andmebaasi 
-    const result = await doctor.save();
+    const result = await hospital.save();
 
     // saadame vastu uuendatud andmed (kui midagi töödeldakse serveris on seda vaja kuvada)
     return res.status(200).json({ data: result });
@@ -141,7 +135,7 @@ try {
     console.log("ERROR", { message: error });
 
     // vasta süsteemi veaga kui andmebaasipäringu jooksul ootamatu viga tekib
-    return res.status(500).json({ message: "Could not update doctor" });
+    return res.status(500).json({ message: "Could not update Hospital" });
 }
 });
 
@@ -150,15 +144,15 @@ router.delete("/:id", async(req, res) => {
     try {
         const { id } = req.params;
     
-        const doctor = await defaultDataSource
-        .getRepository(Doctor)
+        const hospital = await defaultDataSource
+        .getRepository(Hospital)
         .findOneBy({ id: parseInt(id) });
     
-        if (!doctor) {
-        return res.status(404).json({ error: "Doctor not found" });
+        if (!hospital) {
+        return res.status(404).json({ error: "Hospital not found" });
         }
 
-        const result = await doctor.remove();
+        const result = await hospital.remove();
         
         // tagastame igaks juhuks kustutatud andmed
         return res.status(200).json({ data: result });
@@ -166,7 +160,7 @@ router.delete("/:id", async(req, res) => {
         console.log("ERROR", { message: error });
     
         // vasta süsteemi veaga kui andmebaasipäringu jooksul ootamatu viga tekib
-        return res.status(500).json({ message: "Could not update Doctors" });
+        return res.status(500).json({ message: "Could not update Hospitals" });
     }
 });
 

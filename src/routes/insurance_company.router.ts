@@ -1,23 +1,20 @@
 import express from 'express';
 import defaultDataSource from '../datasource';
-import { Doctor } from '../entities/doctor';
+import { Insurance_Company } from '../entities/insurance_company';
 
 const router = express.Router();
 
-interface CreateDoctorParams {
-    fName: string;
-    lName: string;
-    address: string
-    phoneNumber: string;
-    speciality: string;
+interface CreateInsuranceCompanyParams {
+    name: string;
+    address: string;
+    phone: string;
 }
 
-interface UpdateDoctorParams {
-    fName?: string;
-    lName?: string;
+interface UpdateInsuranceCompanyParams {
+    name?: string;
     address?: string;
-    phoneNumber?: string;
-    speciality?: string;
+    phone?: string;
+
 
 }
   
@@ -25,15 +22,15 @@ interface UpdateDoctorParams {
 router.get("/", async (req, res) => {
     try {
       // küsi artiklid andmebaasist
-      const Doctors = await defaultDataSource.getRepository(Doctor).find();
+      const InsuranceCompanys = await defaultDataSource.getRepository(Insurance_Company).find();
   
       // vasta artiklite kogumikuga JSON formaadis
-      return res.status(200).json({ data: Doctors });
+      return res.status(200).json({ data: InsuranceCompanys });
     } catch (error) {
       console.log("ERROR", { message: error });
   
       // vasta süsteemi veaga kui andmebaasipäringu jooksul ootamatu viga tekib
-      return res.status(500).json({ message: "Could not fetch Doctors" });
+      return res.status(500).json({ message: "Could not fetch insurance company" });
     }
 });
   
@@ -41,34 +38,32 @@ router.get("/", async (req, res) => {
 // POST - saadab infot
 router.post("/", async (req, res) => {
 try {
-    const { fName, lName, address, phoneNumber, speciality  } = req.body as CreateDoctorParams;
+    const { name, address, phone } = req.body as CreateInsuranceCompanyParams;
 
     // TODO: validate & santize
-    if (!fName || !lName || !address || !phoneNumber || !speciality) {
+    if (!name || !address || !phone) {
     return res
         .status(400)
-        .json({ error: "doctor has to have first name, last name and title" });
+        .json({ error: "insurance company has to have first name, last name and title" });
     }
 
 
     // create new Author with given parameters
-    const doctor = Doctor.create({
-    fName: fName.trim() ?? "",
-    lName: lName.trim() ?? "",
+    const insurance_Company = Insurance_Company.create({
+    name: name.trim() ?? "",
     address: address.trim() ?? "",
-    phoneNumber: phoneNumber.trim() ?? "",
-    speciality: speciality.trim() ?? "",
+    phone: phone.trim() ?? "",
     });
 
     //save Author to database
-    const result = await doctor.save();
+    const result = await insurance_Company.save();
 
     return res.status(200).json({ data: result });
 } catch (error) {
     console.log("ERROR", { message: error });
 
     // vasta süsteemi veaga kui andmebaasipäringu jooksul ootamatu viga tekib
-    return res.status(500).json({ message: "Could not fetch doctor" });
+    return res.status(500).json({ message: "Could not fetch InsuranceCompanys" });
 }
 });
 
@@ -78,34 +73,34 @@ try {
     const { id } = req.params;
 
     // tavaline ORM päring koos "relation" entity sisuga
-    const doctor = await defaultDataSource
-    .getRepository(Doctor)
+    const insurance_Company = await defaultDataSource
+    .getRepository(Insurance_Company)
     .findOne({ where:{id: parseInt(id)}, relations: ['articles'] });
 
     // Querybuildering tehtud samalaadne päring (leftjoin tüttu hetkel ainult 1)
-    // const doctorArticles = await defaultDataSource.createQueryBuilder()
+    // const drugArticles = await defaultDataSource.createQueryBuilder()
     // .select("*")
-    // .from("doctor", "doctor")
-    // .leftJoin("article", "articles", "articles.doctorId = doctor.id")
-    // .where("doctor.id = :id", {id: id})
+    // .from("insurance_Company", "insurance_Company")
+    // .leftJoin("article", "articles", "articles.drugId = insurance_Company.id")
+    // .where("insurance_Company.id = :id", {id: id})
     // .getRawOne();
     
     // return res.status(200).json({ data: {
-    //     id:doctorArticles.id,
-    //     firstName:doctorArticles.firstName,
-    //     lastName:doctorArticles.lastName,
+    //     id:drugArticles.id,
+    //     firstName:drugArticles.firstName,
+    //     lastName:drugArticles.lastName,
     //     article: {
-    //         title: doctorArticles.title,
-    //         body: doctorArticles.body,
+    //         title: drugArticles.title,
+    //         body: drugArticles.body,
     //     }
     //  }});
 
-    return res.status(200).json({ data: doctor });
+    return res.status(200).json({ data: insurance_Company });
 } catch (error) {
     console.log("ERROR", { message: error });
 
     // vasta süsteemi veaga kui andmebaasipäringu jooksul ootamatu viga tekib
-    return res.status(500).json({ message: "Could not fetch doctor" });
+    return res.status(500).json({ message: "Could not fetch insurance company" });
 }
 });
 
@@ -113,27 +108,25 @@ try {
 router.put("/:id", async (req, res) => {
 try {
     const { id } = req.params;
-    const { fName, lName, address, phoneNumber, speciality } = req.body as UpdateDoctorParams;
+    const { name, address, phone } = req.body as UpdateInsuranceCompanyParams;
 
-    const doctor = await defaultDataSource
-    .getRepository(Doctor)
+    const insurance_Company = await defaultDataSource
+    .getRepository(Insurance_Company)
     .findOneBy({ id: parseInt(id) });
 
-    if (!doctor) {
+    if (!insurance_Company) {
     return res.status(404).json({ error: "Author not found" });
     }
 
     // uuendame andmed objektis (lokaalne muudatus)
-    doctor.fName = fName ? fName : doctor.fName;
-    doctor.lName = lName ? lName : doctor.lName;
-    doctor.address = address ? address : doctor.address;
-    doctor.phoneNumber = phoneNumber ? phoneNumber : doctor.phoneNumber;
-    doctor.speciality = speciality ? speciality : doctor.speciality;
+    insurance_Company.name = name ?? insurance_Company.name;
+    insurance_Company.address = address ?? insurance_Company.address;
+    insurance_Company.phone = phone ?? insurance_Company.phone;
 
     
 
     //salvestame muudatused andmebaasi 
-    const result = await doctor.save();
+    const result = await insurance_Company.save();
 
     // saadame vastu uuendatud andmed (kui midagi töödeldakse serveris on seda vaja kuvada)
     return res.status(200).json({ data: result });
@@ -141,7 +134,7 @@ try {
     console.log("ERROR", { message: error });
 
     // vasta süsteemi veaga kui andmebaasipäringu jooksul ootamatu viga tekib
-    return res.status(500).json({ message: "Could not update doctor" });
+    return res.status(500).json({ message: "Could not update insurance company" });
 }
 });
 
@@ -150,15 +143,15 @@ router.delete("/:id", async(req, res) => {
     try {
         const { id } = req.params;
     
-        const doctor = await defaultDataSource
-        .getRepository(Doctor)
+        const insurance_Company = await defaultDataSource
+        .getRepository(Insurance_Company)
         .findOneBy({ id: parseInt(id) });
     
-        if (!doctor) {
-        return res.status(404).json({ error: "Doctor not found" });
+        if (!insurance_Company) {
+        return res.status(404).json({ error: "Insurance_Company not found" });
         }
 
-        const result = await doctor.remove();
+        const result = await insurance_Company.remove();
         
         // tagastame igaks juhuks kustutatud andmed
         return res.status(200).json({ data: result });
@@ -166,7 +159,7 @@ router.delete("/:id", async(req, res) => {
         console.log("ERROR", { message: error });
     
         // vasta süsteemi veaga kui andmebaasipäringu jooksul ootamatu viga tekib
-        return res.status(500).json({ message: "Could not update Doctors" });
+        return res.status(500).json({ message: "Could not update InsuranceCompanys" });
     }
 });
 
