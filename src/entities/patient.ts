@@ -2,6 +2,7 @@ import {Entity, BaseEntity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany
 import { Doctor } from "./doctor";
 import { Office_Visit } from "./office_visit";
 import { Prescription } from "./prescription";
+import { Insurance_Company } from "./insurance_company";
 
 @Entity()
 
@@ -32,5 +33,8 @@ export class Patient extends BaseEntity {
 
     @OneToMany ((type) => Office_Visit, (officeVisit) => officeVisit.patient)
     officeVisit!: Office_Visit;
+
+    @ManyToOne ((type) => Insurance_Company, (insuranceCompany) => insuranceCompany.patient, {eager: true})
+    insuranceCompany!: Insurance_Company;
     
 }

@@ -31,4 +31,7 @@ export class Prescription extends BaseEntity {
     @ManyToOne ((type) => Patient, (patient) => patient.prescription)
     patient!: Patient;
 
+    @ManyToOne ((type) => Refillable, (refillable) => refillable.prescription)
+    nonRefillable!: Refillable;
+
 }

@@ -14,4 +14,5 @@ export class Hospital extends BaseEntity {
 
     @Column({type:"varchar"})
     phoneNumber!: string;
+
 }
